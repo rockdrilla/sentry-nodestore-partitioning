@@ -10,6 +10,7 @@ BEGIN
         RAISE EXCEPTION 'Invalid id: expected 32-character lowercase hex, got: %', id;
     END IF;
 END;
+$$;
 
 CREATE OR REPLACE FUNCTION nodestore.insert_trigger_fn()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
