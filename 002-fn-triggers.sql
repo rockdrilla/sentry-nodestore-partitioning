@@ -1,22 +1,6 @@
-CREATE OR REPLACE FUNCTION nodestore.is_valid_id_hex32(id TEXT)
-RETURNS BOOLEAN LANGUAGE sql IMMUTABLE AS $$
-    SELECT id ~ '^[0-9a-f]{32}$';
-$$;
-
-CREATE OR REPLACE FUNCTION nodestore.validate_id(id TEXT)
-RETURNS void LANGUAGE plpgsql AS $$
-BEGIN
-    IF NOT nodestore.is_valid_id_hex32(id) THEN
-        RAISE EXCEPTION 'Invalid id: expected 32-character lowercase hex, got: %', id;
-    END IF;
-END;
-$$;
-
 CREATE OR REPLACE FUNCTION nodestore.insert_trigger_fn()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
-    PERFORM nodestore.validate_id(NEW."id");
-
     INSERT INTO nodestore.ids ("id")
     VALUES (NEW."id");
 

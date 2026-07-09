@@ -85,7 +85,7 @@ Safe to run at any time. No data changes.
 | File | What |
 |---|---|
 | `001-create-tables.sql` | Creates `nodestore` schema, `data` + `ids` tables, indexes, 16 "hex" partitions for `ids` table |
-| `002-fn-triggers.sql` | INSERT/UPDATE/DELETE trigger functions, helper functions (`is_valid_id_hex32`, `validate_id`) |
+| `002-fn-triggers.sql` | INSERT/UPDATE/DELETE trigger functions |
 | `011-fn-create-partitions.sql` | Procedure: create daily partitions for a date range |
 | `012-fn-create-partitions-daily.sql` | Wrapper: creates yesterday through next 7 days |
 | `021-fn-delete-partitions.sql` | **Core retention:** detach, batch-delete IDs, drop. Default 90 days, 100K batch size |
@@ -154,9 +154,6 @@ After phase 3, the system runs autonomously: partitions are created daily at
 - **`DETACH PARTITION` without `CONCURRENTLY`.** PostgreSQL prohibits
   `CONCURRENTLY` inside procedures. The plain detach takes `ACCESS EXCLUSIVE`
   — acceptable at 00:05.
-- **Hex-ID validation.** `is_valid_id_hex32()` (IMMUTABLE SQL predicate) +
-  `validate_id()` (PL/pgSQL gate) — single source of truth, called by both
-  insert and update triggers before any DML.
 - **Data-change guard.** The update trigger skips the UPDATE entirely when
   `OLD."data" IS NOT DISTINCT FROM NEW."data"` — no btree probe, no heap
   write, no WAL for no-op updates.
