@@ -7,6 +7,8 @@ AS $$
 DECLARE
     partition_rec RECORD;
     partition_date DATE;
+    detached_names TEXT[] := '{}';
+    partition_name TEXT;
     total_part_rows BIGINT;
     total_deleted_ids BIGINT;
     last_id TEXT;
@@ -44,17 +46,22 @@ BEGIN
             CONTINUE;
         END IF;
 
+        -- Phase 1: detach only — fast, minimal lock
         RAISE NOTICE 'Detaching: %', partition_rec.relname;
         t_start := clock_timestamp();
         EXECUTE format('ALTER TABLE nodestore.data DETACH PARTITION nodestore.%I', partition_rec.relname);
         RAISE NOTICE '[timing] detach: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
-        -- batch delete ids from nodestore.ids for this partition
+        detached_names := array_append(detached_names, partition_rec.relname);
+    END LOOP;
+
+    -- Phase 2: batch-delete IDs and drop each detached partition
+    FOREACH partition_name IN ARRAY detached_names LOOP
         total_part_rows := 0;
         total_deleted_ids := 0;
         last_id := '';
 
-        RAISE NOTICE 'Deleting stale "id"s in batch: %', partition_rec.relname;
+        RAISE NOTICE 'Deleting stale "id"s from: %', partition_name;
         t_start := clock_timestamp();
         LOOP
             part_rows := 0;
@@ -84,7 +91,7 @@ BEGIN
                     (SELECT COUNT(*) FROM batch),
                     (SELECT COUNT(*) FROM deleted)
                 FROM last_row lr',
-                partition_rec.relname
+                partition_name
             )
             INTO last_id, part_rows, part_deleted_ids
             USING last_id, batch_size;
@@ -103,10 +110,10 @@ BEGIN
         RAISE NOTICE 'Deleted "id"s: %', total_deleted_ids;
         RAISE NOTICE '[timing] batch delete: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
-        RAISE NOTICE 'Dropping table: %', partition_rec.relname;
+        RAISE NOTICE 'Dropping table: %', partition_name;
         t_start := clock_timestamp();
-        EXECUTE format('DROP TABLE IF EXISTS nodestore.%I CASCADE', partition_rec.relname);
-        RAISE NOTICE 'Dropped: % (% rows)', partition_rec.relname, total_part_rows;
+        EXECUTE format('DROP TABLE IF EXISTS nodestore.%I CASCADE', partition_name);
+        RAISE NOTICE 'Dropped: % (% rows)', partition_name, total_part_rows;
         RAISE NOTICE '[timing] drop table: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
         total_dropped := total_dropped + total_part_rows;
