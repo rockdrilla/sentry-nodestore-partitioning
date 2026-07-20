@@ -1,6 +1,6 @@
 CREATE OR REPLACE PROCEDURE nodestore.delete_old_partitions(
     retention_days INTEGER DEFAULT 90,
-    batch_size INTEGER DEFAULT 100000
+    batch_size INTEGER DEFAULT 5000
 )
 LANGUAGE plpgsql
 AS $$
@@ -57,6 +57,9 @@ BEGIN
         RAISE NOTICE 'Deleting stale "id"s in batch: %', partition_rec.relname;
         t_start := clock_timestamp();
         LOOP
+            part_rows := 0;
+            part_deleted_ids := 0;
+
             EXECUTE format(
                 'WITH batch AS (
                     SELECT "id"
@@ -86,10 +89,12 @@ BEGIN
             INTO last_id, part_rows, part_deleted_ids
             USING last_id, batch_size;
 
+            last_id := COALESCE(last_id, 'NULL');
             part_rows := COALESCE(part_rows, 0);
-            EXIT WHEN part_rows = 0;
-
             part_deleted_ids := COALESCE(part_deleted_ids, 0);
+
+            -- RAISE NOTICE '[debug] part_rows %, part_deleted_ids %, last_id %', part_rows, part_deleted_ids, last_id;
+            EXIT WHEN part_rows = 0;
 
             total_part_rows := total_part_rows + part_rows;
             total_deleted_ids := total_deleted_ids + part_deleted_ids;

@@ -67,7 +67,7 @@ For each partition older than `retention_days` (default 90):
 1. **Detach** — `ALTER TABLE DETACH PARTITION` unlinks from `nodestore.data`.
    Writes continue uninterrupted on the parent.
 2. **Batch-delete IDs** — scan the detached partition's `id` values in batches
-   (100K records by default), delete matching rows from `nodestore.ids`. Each batch commits
+   (5K records by default), delete matching rows from `nodestore.ids`. Each batch commits
    independently.
 3. **Drop** — `DROP TABLE` removes the detached partition. No WAL from
    row-by-row `DELETE`s.
@@ -88,7 +88,7 @@ Safe to run at any time. No data changes.
 | `002-fn-triggers.sql` | INSERT/UPDATE/DELETE trigger functions |
 | `011-fn-create-partitions.sql` | Procedure: create daily partitions for a date range |
 | `012-fn-create-partitions-daily.sql` | Wrapper: creates yesterday through next 7 days |
-| `021-fn-delete-partitions.sql` | **Core retention:** detach, batch-delete IDs, drop. Default 90 days, 100K batch size |
+| `021-fn-delete-partitions.sql` | **Core retention:** detach, batch-delete IDs, drop. Default 90 days, 5K batch size |
 | `022-fn-delete-partitions-daily.sql` | Wrapper: `CALL nodestore.delete_old_partitions(90)` |
 | `031-fn-recreate-unique-ids.sql` | **Maintenance mode only.** Truncates `nodestore.ids` and repopulates from all `data` partitions |
 | `041-fn-copy-data.sql` | Procedure: copy `nodestore_node` → `nodestore.data` + `nodestore.ids` in batches. Idempotent |

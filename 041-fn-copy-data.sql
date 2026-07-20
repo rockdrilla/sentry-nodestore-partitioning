@@ -1,7 +1,7 @@
 CREATE OR REPLACE PROCEDURE nodestore.copy_data_to_real(
     start_date TIMESTAMPTZ,
     end_date TIMESTAMPTZ,
-    batch_size INTEGER DEFAULT 10000
+    batch_size INTEGER DEFAULT 5000
 )
 LANGUAGE plpgsql
 AS $$
@@ -75,10 +75,14 @@ BEGIN
         INTO last_id, last_timestamp, preflight_rows, batch_rows
         FROM last_row lr;
 
+        last_id := COALESCE(last_id, 'NULL');
+        last_timestamp := COALESCE(last_timestamp, end_date);
         preflight_rows := COALESCE(preflight_rows, 0);
+        batch_rows := COALESCE(batch_rows, 0);
+
+        -- RAISE NOTICE '[debug] preflight_rows %, batch_rows %, last_timestamp %, last_id %', preflight_rows, batch_rows, last_timestamp, last_id;
         EXIT WHEN preflight_rows = 0;
 
-        batch_rows := COALESCE(batch_rows, 0);
         batch_count := batch_count + 1;
         total_copied := total_copied + batch_rows;
 
