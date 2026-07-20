@@ -116,14 +116,9 @@ BEGIN
     RAISE NOTICE 'Dropped % partitions, % rows', partitions_dropped, total_dropped;
 
     IF partitions_dropped > 0 THEN
-        RAISE NOTICE 'Analyzing: nodestore.data';
-        t_start := clock_timestamp();
-        ANALYZE nodestore.data;
-        RAISE NOTICE '[timing] analyze: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
-
         RAISE NOTICE 'Analyzing: nodestore.ids';
         t_start := clock_timestamp();
-        ANALYZE nodestore.ids;
+        ANALYZE ( VERBOSE ) nodestore.ids;
         RAISE NOTICE '[timing] analyze: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
     END IF;
 END;
