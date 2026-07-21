@@ -50,7 +50,7 @@ BEGIN
         RAISE NOTICE 'Detaching: %', partition_rec.relname;
         t_start := clock_timestamp();
         EXECUTE format('ALTER TABLE nodestore.data DETACH PARTITION nodestore.%I', partition_rec.relname);
-        RAISE NOTICE '[timing] detach: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+        RAISE NOTICE '[timing] detach: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
         detached_names := array_append(detached_names, partition_rec.relname);
     END LOOP;
@@ -108,13 +108,13 @@ BEGIN
             COMMIT;
         END LOOP;
         RAISE NOTICE 'Deleted "id"s: %', total_deleted_ids;
-        RAISE NOTICE '[timing] batch delete: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+        RAISE NOTICE '[timing] batch delete: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
         RAISE NOTICE 'Dropping table: %', partition_name;
         t_start := clock_timestamp();
         EXECUTE format('DROP TABLE IF EXISTS nodestore.%I CASCADE', partition_name);
         RAISE NOTICE 'Dropped: % (% rows)', partition_name, total_part_rows;
-        RAISE NOTICE '[timing] drop table: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+        RAISE NOTICE '[timing] drop table: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
         total_dropped := total_dropped + total_part_rows;
         partitions_dropped := partitions_dropped + 1;
@@ -126,7 +126,7 @@ BEGIN
         RAISE NOTICE 'Analyzing: nodestore.ids';
         t_start := clock_timestamp();
         ANALYZE ( VERBOSE ) nodestore.ids;
-        RAISE NOTICE '[timing] analyze: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+        RAISE NOTICE '[timing] analyze: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
     END IF;
 END;
 $$;

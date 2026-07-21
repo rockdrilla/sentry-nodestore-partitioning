@@ -38,7 +38,7 @@ BEGIN
         part_rows := COALESCE(part_rows, 0);
 
         RAISE NOTICE 'Inserted "id"s: %', part_rows;
-        RAISE NOTICE '[timing] select/insert: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+        RAISE NOTICE '[timing] select/insert: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
     END LOOP;
 END;
 $$;

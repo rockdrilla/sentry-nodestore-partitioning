@@ -39,7 +39,7 @@ BEGIN
             EXECUTE format(
               'CREATE TABLE IF NOT EXISTS nodestore.%I PARTITION OF nodestore.data FOR VALUES FROM (%L) TO (%L)',
               part_name, start_of_day, end_of_day);
-            RAISE NOTICE '[timing] create partition: %.3f s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
+            RAISE NOTICE '[timing] create partition: % s', EXTRACT(EPOCH FROM clock_timestamp() - t_start);
 
             EXECUTE format('ALTER TABLE nodestore.%I OWNER TO sentry',
               part_name);
